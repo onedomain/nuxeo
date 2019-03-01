@@ -1,21 +1,22 @@
-/*
- *  * (C) Copyright 2017 Nuxeo (http://nuxeo.com/) and others.
- *   *
- *    * Licensed under the Apache License, Version 2.0 (the "License");
- *     * you may not use this file except in compliance with the License.
- *      * You may obtain a copy of the License at
- *       *
- *        *     http://www.apache.org/licenses/LICENSE-2.0
- *         *
- *          * Unless required by applicable law or agreed to in writing, software
- *           * distributed under the License is distributed on an "AS IS" BASIS,
- *            * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *             * See the License for the specific language governing permissions and
- *              * limitations under the License.
- *               *
- *                * Contributors:
- *                 *     atimic
- *                  */
+/* 
+ *  (C) Copyright 2017 Nuxeo (http://nuxeo.com/) and others.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ * 
+ *  Contributors:
+ *      atimic
+ */
+
 
 currentBuild.setDescription("Branch: $BRANCH -> $PARENT_BRANCH, DB: aurora-$DBPROFILE, VERSION: $DBVERSION")
 
@@ -55,6 +56,11 @@ node(env.NODELABEL) {
                         script {
                             DATABASE_ID = sh(returnStdout: true, script: 'aws cloudformation list-exports --query "Exports[?Name==\\`aurora-db-DatabaseId\\`].Value" --no-paginate --output text --region eu-west-1')
                         }
+                        sh"""
+                        #!/bin/bash -x
+                            aws cloudformation create-stack --stack-name aurora-db --template-body file://\$WORKSPACE/integration/Jenkinsfiles/cfn_aurora_db.yaml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 ||true
+                            aws cloudformation wait stack-create-complete --stack-name aurora-db --region eu-west-1 ||true
+                        """
                         DATABASE_ID = DATABASE_ID.trim();
                         withEnv(["NX_DB_HOST=${DATABASE_ID}", "NX_DB_PORT=5432", "NX_DB_ADMINNAME=nuxeoAurora"]) {
                             withCredentials([usernamePassword(credentialsId: 'AURORA_PGSQL', usernameVariable: 'NX_DB_ADMINUSER', passwordVariable: 'NX_DB_ADMINPASS')]) {
@@ -63,6 +69,11 @@ node(env.NODELABEL) {
                                 } finally {
                                     archive '**/target/failsafe-reports/*, **/target/*.png, **/target/**/*.log, **/target/**/log/*'
                                     junit '**/target/surefire-reports/*.xml, **/target/failsafe-reports/*.xml, **/target/failsafe-reports/**/*.xml'
+                                    sh"""
+                                    #!/bin/bash -x
+                                        aws cloudformation delete-stack --stack-name aurora-db --template-body file://\$WORKSPACE/integration/Jenkinsfiles/cfn_aurora_db.yaml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 ||true
+                                        aws cloudformation wait stack-delete-complete --stack-name aurora-db --region eu-west-1 ||true
+                                    """
                                 }
                             }
                         }
@@ -75,4 +86,3 @@ node(env.NODELABEL) {
         }
     }
 }
-
