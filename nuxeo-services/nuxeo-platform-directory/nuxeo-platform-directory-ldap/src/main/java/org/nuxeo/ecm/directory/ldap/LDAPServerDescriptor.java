@@ -183,7 +183,7 @@ public class LDAPServerDescriptor {
             } catch (LdapURLEncodingException e) {
                 throw new DirectoryException(e);
             }
-            boolean ldaps = ldapUrl.getScheme().startsWith("ldaps");
+            boolean ldaps = LDAPS_SCHEME.equals(ldapUrl.getScheme());
             useSsl = useSsl || ldaps;
 
             /*
