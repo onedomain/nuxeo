@@ -20,7 +20,6 @@ package org.nuxeo.runtime.test.runner;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -63,7 +62,7 @@ public class MethodSorter {
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse " + name, e);
         }
-        Collections.sort(methods, new LineComparator(nameToLine));
+        methods.sort(new LineComparator(nameToLine));
     }
 
     /**
@@ -101,9 +100,7 @@ public class MethodSorter {
 
         @Override
         public void visitLineNumber(int line, Label start) {
-            if (nameToLine.get(name) == null) {
-                nameToLine.put(name, Integer.valueOf(line));
-            }
+            nameToLine.computeIfAbsent(name, k -> Integer.valueOf(line));
         }
     }
 
