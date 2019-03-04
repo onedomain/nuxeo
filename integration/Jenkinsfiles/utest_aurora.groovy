@@ -56,11 +56,14 @@ node(env.NODELABEL) {
                         script {
                             DATABASE_ID = sh(returnStdout: true, script: 'aws cloudformation list-exports --query "Exports[?Name==\\`aurora-db-DatabaseId\\`].Value" --no-paginate --output text --region eu-west-1')
                         }
-                        sh"""
+                        sh'''
                         #!/bin/bash -x
+                            VPC=$(aws cloudformation list-exports --query "Exports[?Name=='qa-generic-VPCStack'].Value" --output text --region eu-west-1)
+                            SUBNET1=$(aws cloudformation list-exports --query "Exports[?Name=='qa-generic-SubnetIds'].Value" --output text --region eu-west-1 |cut -d"," -f 1)
+                            SUBNET2=$(aws cloudformation list-exports --query "Exports[?Name=='qa-generic-SubnetIds'].Value" --output text --region eu-west-1 |cut -d"," -f 2)
                             aws cloudformation create-stack --stack-name aurora-db --template-body file://\$WORKSPACE/integration/Jenkinsfiles/cfn_aurora_db.yaml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 ||true
                             aws cloudformation wait stack-create-complete --stack-name aurora-db --region eu-west-1 ||true
-                        """
+                        '''
                         DATABASE_ID = DATABASE_ID.trim();
                         withEnv(["NX_DB_HOST=${DATABASE_ID}", "NX_DB_PORT=5432", "NX_DB_ADMINNAME=nuxeoAurora"]) {
                             withCredentials([usernamePassword(credentialsId: 'AURORA_PGSQL', usernameVariable: 'NX_DB_ADMINUSER', passwordVariable: 'NX_DB_ADMINPASS')]) {

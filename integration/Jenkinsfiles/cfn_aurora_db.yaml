@@ -34,9 +34,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow Postgresql port 5432 From VPC qa-generic
-      VpcId:
-        Fn::ImportValue:
-          !Sub "qa-generic-VPCID"
+      VpcId: ${VPC}
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 5432
@@ -58,8 +56,8 @@ Resources:
     Properties:
       DBSubnetGroupDescription: "The EC2 Subnet IDs for the DB Subnet Group"
       SubnetIds:
-        - !Select [ 0, !Split [ ",", !ImportValue qa-generic-SubnetIds ] ]
-        - !Select [ 1, !Split [ ",", !ImportValue qa-generic-SubnetIds ] ]
+        - ${SUBNET1}
+        - ${SUBNET2}
       Tags:
         -
           Key: "billing-category"
