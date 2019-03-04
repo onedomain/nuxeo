@@ -71,7 +71,7 @@ node(env.NODELABEL) {
                                     junit '**/target/surefire-reports/*.xml, **/target/failsafe-reports/*.xml, **/target/failsafe-reports/**/*.xml'
                                     sh"""
                                     #!/bin/bash -x
-                                        aws cloudformation delete-stack --stack-name aurora-db --template-body file://\$WORKSPACE/integration/Jenkinsfiles/cfn_aurora_db.yaml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 ||true
+                                        aws cloudformation delete-stack --stack-name aurora-db --region eu-west-1 ||true
                                         aws cloudformation wait stack-delete-complete --stack-name aurora-db --region eu-west-1 ||true
                                     """
                                 }
