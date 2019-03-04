@@ -58,10 +58,11 @@ node(env.NODELABEL) {
                         }
                         sh'''
                         #!/bin/bash -x
-                            VPC=$(aws cloudformation list-exports --query "Exports[?Name=='qa-generic-VPCStack'].Value" --output text --region eu-west-1) \
-                            SUBNET1=$(aws cloudformation list-exports --query "Exports[?Name=='qa-generic-SubnetIds'].Value" --output text --region eu-west-1 |cut -d"," -f 1) \
-                            SUBNET2=$(aws cloudformation list-exports --query "Exports[?Name=='qa-generic-SubnetIds'].Value" --output text --region eu-west-1 |cut -d"," -f 2) \
-                            aws cloudformation create-stack --stack-name aurora-db --template-body file://\$WORKSPACE/integration/Jenkinsfiles/cfn_aurora_db.yaml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 ||true
+                            VPC=$(aws cloudformation list-exports --query "Exports[?Name=='qa-generic-VPCID'].Value" --output text --region eu-west-1)
+                            SUBNET1=$(aws cloudformation list-exports --query "Exports[?Name=='qa-generic-SubnetIds'].Value" --output text --region eu-west-1 |cut -d"," -f 1) 
+                            SUBNET2=$(aws cloudformation list-exports --query "Exports[?Name=='qa-generic-SubnetIds'].Value" --output text --region eu-west-1 |cut -d"," -f 2)
+                            aws cloudformation create-stack --stack-name aurora-db --template-body file://\$WORKSPACE/integration/Jenkinsfiles/cfn_aurora_db.yaml --capabilities CAPABILITY_NAMED_IAM \
+                            --parameters ParameterKey=VPC,ParameterValue=$VPC ParameterKey=SUBNET1,ParameterValue=$SUBNET1 ParameterKey=SUBNET2,ParameterValue=$SUBNET2 --region eu-west-1 ||true
                             aws cloudformation wait stack-create-complete --stack-name aurora-db --region eu-west-1 ||true
                         '''
                         DATABASE_ID = DATABASE_ID.trim();

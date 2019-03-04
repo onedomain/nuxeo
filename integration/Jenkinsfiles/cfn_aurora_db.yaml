@@ -2,6 +2,17 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Aurora PostgreSQL DB
 
+Parameters:
+
+  VPC:
+    Type: String
+
+  SUBNET1:
+    Type: String
+
+  SUBNET2:
+    Type: String
+
 Resources:
 
   NuxeoDBCluster:
@@ -34,7 +45,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow Postgresql port 5432 From VPC qa-generic
-      VpcId: ${VPC}
+      VpcId: !Ref VPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 5432
@@ -56,8 +67,8 @@ Resources:
     Properties:
       DBSubnetGroupDescription: "The EC2 Subnet IDs for the DB Subnet Group"
       SubnetIds:
-        - ${SUBNET1}
-        - ${SUBNET2}
+        - !Ref SUBNET1
+        - !Ref SUBNET2
       Tags:
         -
           Key: "billing-category"
